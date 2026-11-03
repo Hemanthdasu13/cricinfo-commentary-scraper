@@ -36,10 +36,26 @@ Options: `--output-dir` (default `data`) and `--delay` seconds between requests
 
 ## Collected so far
 
-The NZ in India 2025-26 T20I series (India won 4-1), 1,148 deliveries. The
-scraped files are git-ignored (the commentary is ESPNcricinfo's content). Run
-the `--from-file` command above to regenerate them in
-`data/ind_vs_nz_t20i_2026/`.
+The scraped files are git-ignored (the commentary is ESPNcricinfo's content).
+Run `--from-file` with the matching list in `matches/` to regenerate them.
+
+### India in New Zealand 2026-27, 5 T20Is (India won 3-2)
+
+List: `matches/ind_in_nz_t20i_2026.txt`. Output: `data/ind_in_nz_t20i_2026/`
+(1,209 deliveries).
+
+| Match | ID | Venue | Result | Deliveries |
+|---|---|---|---|---|
+| 1st T20I | 1539432 | Christchurch | NZ 225/4, IND 230/6 (19.4): India by 4 wkts | 254 |
+| 2nd T20I | 1539433 | Christchurch | NZ 180/5, IND 181/6 (19.5): India by 4 wkts | 254 |
+| 3rd T20I | 1539434 | Wellington | NZ 198/3, IND 199/4 (13.2): India by 6 wkts | 212 |
+| 4th T20I | 1539435 | Auckland | NZ 259/7, IND 172/9: NZ by 87 runs | 253 |
+| 5th T20I | 1539436 | Hamilton | IND 191/8, NZ 195/3 (18): NZ by 7 wkts | 236 |
+
+### New Zealand in India 2025-26, 5 T20Is (India won 4-1)
+
+List: `matches/ind_vs_nz_t20i_2026.txt`. Output: `data/ind_vs_nz_t20i_2026/`
+(1,148 deliveries).
 
 | Match | ID | Result | Deliveries |
 |---|---|---|---|
