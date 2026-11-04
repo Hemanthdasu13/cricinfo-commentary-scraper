@@ -34,6 +34,40 @@ A whole series from a URL list (one URL per line, `#` comments allowed):
 Options: `--output-dir` (default `data`) and `--delay` seconds between requests
 (default 1.5).
 
+### Finding every match for a team and year
+
+You don't have to build match lists by hand. `find_matches.py` builds one for a
+team's whole year:
+
+```powershell
+.venv\Scripts\python find_matches.py --team-id 6 --year 2026 --out matches/india_2026.txt
+.venv\Scripts\python cricinfo_commentary.py --from-file matches/india_2026.txt --output-dir data/india_2026
+```
+
+Use a date range instead of a year, and keep only some formats:
+
+```powershell
+.venv\Scripts\python find_matches.py --team-id 6 --start 2023-11-20 --out matches/india_since_wc2023.txt
+.venv\Scripts\python cricinfo_commentary.py --from-file matches/india_since_wc2023.txt --formats odi,t20 --output-dir data/india_since_wc2023_odi_t20i
+```
+
+`--formats` (`t20`, `odi`, `test`) is detected from Cricinfo's data (the 120 or
+300 ball limit per innings). A match in another format is skipped after one
+request. Every CSV row also has a `format` column.
+
+Cricinfo's own website blocks automated requests, so the fixture list comes
+from ESPN.com (`espn.com/cricket/scores/team/<id>`). ESPN owns Cricinfo and the
+match IDs are identical. The commentary itself still comes from Cricinfo's
+feed. The script:
+
+- reads one page per month and falls back to day-by-day pages when ESPN returns
+  an error for a month, then retries any failed days more slowly;
+- keeps completed matches only; and
+- skips non-competitive games by default: `--exclude "sixes,warm-up,tour match"`.
+
+It warns and exits with code 1 if any day still can't be fetched, so a gap is
+never silent. Team IDs are in ESPN URLs (India 6, NZ 5, Australia 2, England 1).
+
 ## Collected so far
 
 The scraped files are git-ignored (the commentary is ESPNcricinfo's content).

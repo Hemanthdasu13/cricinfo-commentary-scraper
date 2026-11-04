@@ -4,3 +4,7 @@ __pycache__/
 
 # scraped Cricinfo commentary stays local (ESPNcricinfo content)
 data/
+
+# private notes and stray debug output
+PROJECT_AND_RESUME.md
+*.out

@@ -33,7 +33,7 @@ API = "https://site.web.api.espn.com/apis/site/v2/sports/cricket/{series_id}/pla
 MAX_INNINGS = 6  # 2 innings + room for super overs
 
 FIELDS = [
-    "series_id", "match_id", "match_label", "innings", "innings_label", "batting_team",
+    "series_id", "match_id", "match_label", "format", "innings", "innings_label", "batting_team",
     "over", "over_number", "ball_in_over", "bowler", "batter", "non_striker",
     "runs", "play_type", "is_wicket", "dismissal_type", "dismissal_text",
     "innings_runs", "innings_wickets", "target", "short_text", "text", "pre_text", "post_text",
@@ -44,10 +44,19 @@ TAG_RE = re.compile(r"<[^>]+>")
 
 
 def ids_from_url(url: str) -> tuple[str, str]:
-    """Return (series_id, match_id) from a normal Cricinfo match URL."""
-    if "espncricinfo.com" not in urlparse(url).netloc:
-        raise ValueError(f"Not an espncricinfo.com URL: {url}")
-    ids = re.findall(r"-(\d+)(?=/|$|\?)", url)
+    """Return (series_id, match_id) from a Cricinfo or ESPN.com match URL.
+
+    Cricinfo: espncricinfo.com/series/<name>-<series_id>/<match-name>-<match_id>/...
+    ESPN.com: espn.com/cricket/series/<series_id>/game/<match_id>/<match-name>
+    (ESPN owns Cricinfo; the match IDs are the same and the feed accepts both.)
+    """
+    host = urlparse(url).netloc
+    if "espncricinfo.com" in host or "cricinfo.com" in host:
+        ids = re.findall(r"-(\d+)(?=/|$|\?)", url)
+    elif "espn." in host:
+        ids = list(re.search(r"/series/(\d+)/game/(\d+)", url).groups()) if "/game/" in url else []
+    else:
+        raise ValueError(f"Not a Cricinfo/ESPN cricket URL: {url}")
     if len(ids) < 2:
         raise ValueError(f"Could not find series and match IDs in: {url}")
     return ids[0], ids[1]
@@ -55,8 +64,8 @@ def ids_from_url(url: str) -> tuple[str, str]:
 
 def label_from_url(url: str) -> str:
     """'india-vs-new-zealand-5th-t20i-1490238' -> 'India vs New Zealand 5th T20I'."""
-    parts = [p for p in urlparse(url).path.split("/") if p]
-    slug = parts[2] if len(parts) > 2 else parts[-1]
+    parts = [p for p in urlparse(url).path.split("/") if p and p != "ball-by-ball-commentary"]
+    slug = parts[2] if "cricinfo" in urlparse(url).netloc and len(parts) > 2 else parts[-1]
     words = re.sub(r"-\d+$", "", slug).split("-")
     return " ".join(w.upper() if w in {"t20i", "odi"} else w if w == "vs" else w.capitalize() for w in words)
 
@@ -98,10 +107,21 @@ def get_page(session: requests.Session, series_id: str, match_id: str, period: i
     raise RuntimeError("unreachable")
 
 
-def fetch_match(session: requests.Session, series_id: str, match_id: str, delay: float) -> tuple[list[dict], list[dict]]:
+def match_format(item: dict[str, Any]) -> str:
+    """'t20', 'odi' or 'test', from the innings ball limit (120 / 300 / none)."""
+    limit = (item.get("innings") or {}).get("ballLimit") or 0
+    return {120: "t20", 300: "odi"}.get(int(limit), "test" if not limit else f"{limit}-ball")
+
+
+def fetch_match(
+    session: requests.Session, series_id: str, match_id: str, delay: float, formats: set[str] | None = None
+) -> tuple[list[dict], list[dict], str]:
+    """Return (deliveries, raw pages, format). With `formats`, a match in any
+    other format is abandoned after its first request and returns no deliveries."""
     items: list[dict[str, Any]] = []
     raw_pages: list[dict[str, Any]] = []
     seen: set[str] = set()
+    fmt = ""
 
     for period in range(1, MAX_INNINGS + 1):
         page, page_count = 1, 1
@@ -120,6 +140,10 @@ def fetch_match(session: requests.Session, series_id: str, match_id: str, delay:
                     seen.add(key)
                     items.append(item)
             time.sleep(delay)
+            if items and not fmt:
+                fmt = match_format(items[0])
+                if formats and fmt not in formats:
+                    return [], raw_pages, fmt
             if not page_items:
                 break
             page += 1
@@ -128,7 +152,7 @@ def fetch_match(session: requests.Session, series_id: str, match_id: str, delay:
         print(f"  innings {period}: {sum(i.get('period') == period for i in items)} deliveries")
 
     items.sort(key=lambda i: (i.get("period", 0), i.get("sequence", 0)))
-    return items, raw_pages
+    return items, raw_pages, fmt
 
 
 def normalise(item: dict[str, Any], series_id: str, match_id: str, label: str) -> dict[str, Any]:
@@ -139,6 +163,7 @@ def normalise(item: dict[str, Any], series_id: str, match_id: str, label: str) -
         "series_id": series_id,
         "match_id": match_id,
         "match_label": label,
+        "format": match_format(item),
         "innings": item.get("period", ""),
         "innings_label": item.get("periodText", ""),
         "batting_team": (item.get("team") or {}).get("displayName", ""),
@@ -184,7 +209,9 @@ def main() -> int:
     parser.add_argument("--from-file", type=Path, help="Text file with one match URL per line")
     parser.add_argument("--output-dir", type=Path, default=Path("data"), help="Where to write CSV/JSON (default: data)")
     parser.add_argument("--delay", type=float, default=1.5, help="Seconds between API requests (default: 1.5)")
+    parser.add_argument("--formats", help="Only these formats, comma-separated: t20,odi,test (default: all)")
     args = parser.parse_args()
+    formats = {f.strip().lower() for f in args.formats.split(",")} if args.formats else None
 
     urls = list(args.urls) + (read_url_file(args.from_file) if args.from_file else [])
     if not urls:
@@ -195,19 +222,28 @@ def main() -> int:
     session.headers.update({"User-Agent": USER_AGENT, "Accept": "application/json"})
 
     combined: list[dict[str, Any]] = []
-    failures = 0
+    empty: list[str] = []
+    failures = other_format = 0
     for url in urls:
         try:
             series_id, match_id = ids_from_url(url)
             label = label_from_url(url)
             print(f"{label} ({match_id})")
-            items, raw_pages = fetch_match(session, series_id, match_id, args.delay)
+            items, raw_pages, fmt = fetch_match(session, series_id, match_id, args.delay, formats)
         except (ValueError, requests.RequestException, json.JSONDecodeError) as exc:
             print(f"  FAILED: {exc}", file=sys.stderr)
             failures += 1
             continue
 
         rows = [normalise(i, series_id, match_id, label) for i in items]
+        if formats and fmt and fmt not in formats:
+            print(f"  {fmt} - skipped (--formats {args.formats})")
+            other_format += 1
+            continue
+        if not rows:
+            print("  no commentary available (abandoned or not covered) - skipped")
+            empty.append(f"{label} ({match_id})")
+            continue
         (args.output_dir / f"{match_id}.raw.json").write_text(
             json.dumps(raw_pages, ensure_ascii=False), encoding="utf-8")
         write_csv(args.output_dir / f"{match_id}.csv", rows)
@@ -217,6 +253,12 @@ def main() -> int:
     if len(urls) > 1 and combined:
         write_csv(args.output_dir / "all_matches.csv", combined)
         print(f"Combined {len(combined)} deliveries -> {args.output_dir / 'all_matches.csv'}")
+    if other_format:
+        print(f"Skipped {other_format} match(es) in other formats")
+    if empty:
+        print(f"No commentary for {len(empty)} match(es): {', '.join(empty)}")
+    if failures:
+        print(f"{failures} match(es) FAILED - see errors above", file=sys.stderr)
 
     return 1 if failures else 0
 
