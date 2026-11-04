@@ -1,4 +1,4 @@
-# Cricket matchup intelligence: the data layer
+# Cricket Decision-Intelligence Platform: the data layer
 
 This repository collects the historical ball-by-ball data behind a
 **conversational cricket companion**. The idea is an app that watches the match
