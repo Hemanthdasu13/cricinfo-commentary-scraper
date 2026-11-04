@@ -10,6 +10,32 @@ walks every innings and page, then saves:
   reprocessed later; and
 - `all_matches.csv`, which combines every match when you scrape more than one.
 
+## What this is for
+
+This is the data layer of an **AI Cricket Analyst**: a tool meant to answer
+questions like "How do you get this batter out?" or "Why did India lose this
+match?" and back every answer with the deliveries and commentary behind it.
+Scorecards show *what* happened; the aim is to explain *why*, show the
+evidence and say how confident the answer is.
+
+Two design rules shape it:
+
+- **Code does the maths, the model does the explaining.** Statistics come from
+  deterministic Python. A language model only interprets evidence it is given,
+  and cites the match, over and ball for every claim.
+- **Honest uncertainty.** Answers carry sample sizes and say what cannot be
+  concluded.
+
+**Status:** the collection layer (this repository) is built and checked:
+every innings' delivery count is matched against the feed's own count, and
+final scores against official results. The analysis layer is designed but not
+built yet; its first milestone is one end-to-end opposition report for a
+single batter in T20Is.
+
+**Known limitation:** format is inferred from the innings ball limit (120 =
+T20, 300 = ODI), so rain-reduced matches with other limits are skipped by
+`--formats`. The fix is to read the format from the match metadata.
+
 ## Setup
 
 ```powershell
