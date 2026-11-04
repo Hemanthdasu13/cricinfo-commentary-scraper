@@ -48,11 +48,13 @@ call can be checked.
 
 ## Why the method travels
 
-Finding which matchup favours the batter is the same job as finding which
-customer segment responds to which offer: collect the history, find the
-patterns that hold up, predict, then check the predictions against what
-actually happened. Cricket is the test domain because the data is rich, public
-and changes ball by ball.
+The core question is a prediction from history: will this batter get out, or
+hit a six, in this over? Swap the batter for a customer and the over for a
+product, and it is a question a bank asks every day: from this customer's past
+transactions, how likely are they to buy this product? The steps are the same:
+collect the history, find the patterns that hold up, predict, then check each
+prediction against what actually happened. Cricket is the test domain because
+the data is rich, public and changes ball by ball.
 
 ## Status
 
@@ -194,3 +196,9 @@ between-ball notes (team news, end-of-over remarks), with HTML stripped.
 - Keep the request delay in place and don't use this for high-volume
   collection. Commentary text belongs to ESPNcricinfo, so check that your use
   is permitted by its terms before redistributing the data.
+
+## Licence
+
+Copyright © 2026 Hemanth Dasu. All rights reserved. The code is public so it
+can be read and reviewed; no licence is granted to copy, modify or
+redistribute it.
