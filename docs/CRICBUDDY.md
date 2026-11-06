@@ -3,8 +3,10 @@
 **A cricket companion that sits alongside a live match and tells you what to
 watch for, before it happens.**
 
-Status: in development. The data and analysis foundations are built; the live
-app is not. Section 5 shows exactly where each part stands.
+Status: the first product slice is built: an ODI chase situation lab that gives
+an uncertainty-aware estimate from comparable historical states. The live
+companion is the longer-term product. Section 5 shows exactly where each part
+stands.
 
 ## 1. The problem
 
@@ -97,6 +99,7 @@ explains.** A language model never makes up a number.
 | Player styles | Built: batting hand and bowling type for 1,173 players |
 | Linking commentary to match records | Built: 98% of IPL deliveries linked by player ID |
 | Pattern engine | In progress: baselines, matchup profiles, sample-size rules |
+| Situation lab | Built: a fan-facing ODI chase-state prototype with comparable historical support and an uncertainty band |
 | Replay testing | Planned |
 | Live match feed | Planned |
 | Conversational app | Planned |
@@ -110,9 +113,9 @@ explains.** A language model never makes up a number.
 ## 7. Why I'm building it
 
 Two reasons. The first is cricket: I want more people to enjoy watching it,
-and I think context is what's missing. The second is professional. My
-background is engineering and business development, and this project is how
-I'm building hands-on skills in Python, SQL and AI workflows.
+and I think context is what's missing. The second is professional. The project
+is a hands-on way to build and evaluate an evidence-based product using Python,
+SQL and AI workflows.
 The method carries straight over to business. Predicting whether a batter will
 struggle against off-spin is the same shape of problem as predicting whether a
 customer will respond to an offer. You collect the history, find patterns that

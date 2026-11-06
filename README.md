@@ -19,6 +19,11 @@ call can be checked.
 this data, how it will be built and where each part stands are in
 [docs/CRICBUDDY.md](docs/CRICBUDDY.md).
 
+The first product slice is an **ODI chase situation lab**: a user enters the
+target, score, wickets and balls remaining, then sees a time-locked historical
+estimate with its uncertainty and supporting sample. It is deliberately narrow
+and does not make player-level or captaincy recommendations yet.
+
 ## How the predictions get sharper
 
 1. **Basic matchups.** Batter against bowler type: left-arm orthodox, wrist

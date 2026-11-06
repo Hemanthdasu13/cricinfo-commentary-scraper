@@ -1,4 +1,4 @@
-"""Initial Streamlit interface for CricketIQ's data foundation."""
+"""The first public-facing CricBuddy experience: ODI chase situation analysis."""
 
 from __future__ import annotations
 
@@ -17,109 +17,201 @@ from cricketiq.database import connect, status_rows
 from cricketiq.decision_model import CalibratedStateOdds, ChaseState, load_odi_chase_states
 
 
-st.set_page_config(page_title="CricketIQ", page_icon="🏏", layout="wide")
-st.markdown(
-    """<style>
-    .stApp { background: #07130f; color: #e6eee9; }
-    [data-testid="stSidebar"] { background: #0d2119; }
-    .stMetric { background: #102a20; border: 1px solid #234534; border-radius: 10px; padding: 12px; }
-    </style>""",
-    unsafe_allow_html=True,
-)
+REFERENCE_DATA_END = date(2026, 10, 31)
+ODI_DIRECTORY = ROOT / "data" / "cricsheet" / "odis_male"
 
-st.sidebar.title("CricketIQ")
-page = st.sidebar.radio(
-    "Navigate",
-    ["Data status", "Decision odds", "About the evidence"],
-    label_visibility="collapsed",
+
+st.set_page_config(
+    page_title="CricBuddy | Situation lab",
+    page_icon=":material/sports_cricket:",
+    layout="wide",
 )
 
 
-@st.cache_data(max_entries=12, show_spinner=False)
+@st.cache_data(max_entries=2, show_spinner=False)
 def recent_odi_chase_states(as_of: date):
-    """Load a bounded recent ODI reference set for the interactive prototype."""
+    """Load reproducible, time-locked ODI chase snapshots for the calculator."""
     return load_odi_chase_states(
-        ROOT / "data" / "cricsheet" / "odis_male",
+        ODI_DIRECTORY,
         before=as_of,
         minimum_match_id=1_300_000,
     )
 
-if page == "Data status":
-    st.title("CricketIQ data status")
-    st.caption("Facts and source commentary are imported separately; links are created only when the delivery match is unambiguous.")
-    if not DEFAULT_DB_PATH.exists():
-        st.warning("No local database yet. Run the IPL starter import first.")
-        st.code(r".\.venv\Scripts\python.exe -m cricketiq.ingest", language="powershell")
-    else:
-        connection = connect(DEFAULT_DB_PATH, read_only=True)
-        metrics = status_rows(connection)
-        values = dict(metrics)
-        columns = st.columns(3)
-        for index, (label, value) in enumerate(metrics):
-            columns[index % 3].metric(label, f"{value:,}")
-        st.subheader("Coverage and link confidence")
-        st.write(
-            f"{values['Verified commentary links']:,} of {values['Commentary records']:,} commentary records link to a "
-            "Cricsheet delivery using six checks: match, innings, ball label, batter and bowler (by Cricinfo ID), "
-            "and runs. All other records remain unresolved rather than guessed."
+
+def sidebar() -> str:
+    with st.sidebar:
+        st.title("CricBuddy", icon=":material/sports_cricket:")
+        st.caption("A smarter way to watch cricket.")
+        page = st.radio(
+            "Navigate",
+            ["Situation lab", "How it works", "The evidence"],
+            label_visibility="collapsed",
         )
-        recent_issues = connection.execute(
-            "SELECT issue_type, detail, source_path FROM validation_issues ORDER BY recorded_at DESC LIMIT 25"
-        ).fetchdf()
-        if values["Validation issues"]:
-            st.subheader("Validation issues")
-            st.dataframe(recent_issues, use_container_width=True, hide_index=True)
-        else:
-            st.success("No validation issues were recorded during the latest import.")
-        connection.close()
-elif page == "Decision odds":
-    st.title("Decision odds")
-    st.caption("A time-locked baseline for ODI chases. It estimates the match state, not whether a named bowling change was right.")
-    st.info(
-        "This beta view deliberately blocks player-level captaincy recommendations. "
-        "Those require a separate counterfactual model that has passed held-out validation.",
-        title="Evidence guardrail",
-    )
-    with st.form("decision_state"):
-        left, middle, right = st.columns(3)
-        with left:
-            target = st.number_input("Target", min_value=2, max_value=600, value=326, step=1)
-            score = st.number_input("Current score", min_value=0, max_value=599, value=230, step=1)
-        with middle:
-            wickets = st.number_input("Wickets lost", min_value=0, max_value=9, value=5, step=1)
-            balls_remaining = st.number_input("Legal balls remaining", min_value=1, max_value=300, value=79, step=1)
-        with right:
-            as_of = st.date_input("Information available through", value=date(2026, 10, 31))
-        submitted = st.form_submit_button("Estimate state odds", width="stretch")
+        st.space("medium")
+        st.badge("Prototype", icon=":material/science:", color="blue")
+        st.caption("For fans, not betting. Every estimate shows its uncertainty.")
+    return page
 
-    if submitted:
-        if score >= target:
-            st.success("The target has already been reached.")
-        else:
-            result_slot = st.container()
-            with result_slot:
-                with st.spinner("Building a time-prior ODI comparison set..."):
-                    history = recent_odi_chase_states(as_of)
-                    query = ChaseState("interactive", as_of, int(target), int(score), int(wickets), int(balls_remaining), False)
-                    estimate = CalibratedStateOdds(history).estimate(query)
-            chasing = estimate.chase_win_probability
-            with st.container(horizontal=True):
-                st.metric("Chasing side", f"{chasing:.1%}", border=True)
-                st.metric("Defending side", f"{1 - chasing:.1%}", border=True)
-                st.metric("80% uncertainty band", f"{estimate.lower_80:.1%}–{estimate.upper_80:.1%}", border=True)
-                st.metric("Effective comparisons", f"{estimate.effective_sample_size:.0f}", border=True)
-            st.caption(
-                "This estimate uses historical states dated before the selected cutoff, matched on target, required rate, "
-                "balls remaining and wickets. It is a baseline control, not a betting price or a bowling-plan recommendation."
-            )
-else:
-    st.title("Evidence-first by design")
+
+def situation_lab() -> None:
+    st.title("Who has the edge?")
     st.markdown(
-        """
-        CricketIQ is being built around a simple rule: **the database retrieves, Python calculates, and AI explains**.
-
-        This first screen is intentionally limited to import coverage. It does not make tactical claims, generate an
-        analysis, or infer delivery context. Those features will be added only after their source data and calculations
-        are present and testable.
-        """
+        "Enter an ODI chase situation to see an evidence-backed estimate from comparable historical match states."
     )
+    st.caption(
+        f"Reference data is locked through {REFERENCE_DATA_END.day} {REFERENCE_DATA_END:%B %Y}. This is a probability estimate, not a prediction or betting price."
+    )
+
+    with st.container(border=True):
+        st.subheader("Describe the chase", icon=":material/tune:")
+        with st.form("chase_state"):
+            first, second, third = st.columns(3)
+            with first:
+                target = st.number_input("Target", min_value=2, max_value=600, value=326, step=1)
+                score = st.number_input("Current score", min_value=0, max_value=599, value=230, step=1)
+            with second:
+                wickets = st.number_input("Wickets lost", min_value=0, max_value=9, value=5, step=1)
+                balls_remaining = st.number_input(
+                    "Legal balls remaining", min_value=1, max_value=300, value=79, step=1
+                )
+            with third:
+                st.markdown("**What this uses**")
+                st.caption("Target, required rate, wickets and balls remaining. Player and venue effects are not yet included.")
+                st.caption(f"Dataset cutoff: {REFERENCE_DATA_END:%d %b %Y}")
+            submitted = st.form_submit_button(
+                "Estimate the chase", type="primary", icon=":material/query_stats:", width="stretch"
+            )
+
+    result_area = st.container()
+    if not submitted:
+        with result_area.container(border=True):
+            st.subheader("Start with a real match state", icon=":material/play_circle:")
+            st.markdown(
+                "Use the fields above to test any ODI chase. CricBuddy will show the probability, its uncertainty, and the amount of historical support behind it."
+            )
+        return
+
+    if score >= target:
+        st.success("The target has already been reached.", icon=":material/check_circle:")
+        return
+
+    if score > target - 1:
+        st.error("Current score must be below the target.", icon=":material/error:")
+        return
+
+    with result_area.skeleton(height=300):
+        history = recent_odi_chase_states(REFERENCE_DATA_END)
+        if len(history) < 50:
+            st.error(
+                "The historical ODI reference set is not available in this deployment yet.",
+                icon=":material/database_off:",
+            )
+            return
+        query = ChaseState(
+            "interactive",
+            REFERENCE_DATA_END,
+            int(target),
+            int(score),
+            int(wickets),
+            int(balls_remaining),
+            False,
+        )
+        estimate = CalibratedStateOdds(history).estimate(query)
+
+    runs_required = query.runs_required
+    required_rate = query.required_rate
+    st.header("The situation", icon=":material/insights:")
+    primary, support, uncertainty, rate = st.columns(4)
+    primary.metric("Chasing side win chance", f"{estimate.chase_win_probability:.0%}", border=True)
+    support.metric("Comparable historical support", f"{estimate.effective_sample_size:.0f}", border=True)
+    uncertainty.metric("80% uncertainty band", f"{estimate.lower_80:.0%}–{estimate.upper_80:.0%}", border=True)
+    rate.metric("Required rate", f"{required_rate:.2f}", f"{runs_required} runs needed", border=True)
+
+    with st.container(border=True):
+        st.subheader("What this means", icon=":material/lightbulb:")
+        st.markdown(
+            f"At **{score}/{wickets}**, the chasing side needs **{runs_required} from {balls_remaining} legal balls**. "
+            f"CricBuddy found a weighted set of historical ODI chase states with similar targets, required rates, "
+            f"wickets and time remaining. Those states produce a central estimate of **{estimate.chase_win_probability:.0%}**."
+        )
+        st.caption(
+            "The range is deliberately shown because no match state is certain. More comparable history produces a more stable estimate."
+        )
+
+    with st.expander("How the estimate is calculated", icon=":material/biotech:"):
+        st.markdown(
+            "CricBuddy compares the entered state with historical ODI chases known before the data cutoff. "
+            "The closest 250 states are weighted by similarity in required rate, balls remaining, wickets lost and target. "
+            "A conservative prior keeps a narrow slice of history from producing a misleading 0% or 100% result."
+        )
+        st.caption(
+            "This is a match-state baseline only. It does not yet judge a captaincy decision or account for named players, bowling plans, venue or weather."
+        )
+
+
+def how_it_works() -> None:
+    st.title("A cricket companion, not a tip sheet")
+    st.markdown(
+        "CricBuddy gives fans context before the next important moment—not a false promise about what will happen."
+    )
+    first, second, third = st.columns(3)
+    with first.container(border=True, height="stretch"):
+        st.subheader("1. Start with evidence", icon=":material/database:")
+        st.markdown("Historical ball-by-ball data is structured and checked before it reaches the analysis layer.")
+    with second.container(border=True, height="stretch"):
+        st.subheader("2. Compare the situation", icon=":material/compare_arrows:")
+        st.markdown("The prototype finds comparable ODI chases rather than pretending every match is the same.")
+    with third.container(border=True, height="stretch"):
+        st.subheader("3. Explain the uncertainty", icon=":material/fact_check:")
+        st.markdown("Every insight carries its sample support and range. Thin evidence stays visibly thin.")
+
+    st.header("What comes next", icon=":material/rocket_launch:")
+    st.markdown(
+        "The next product increments will add player matchups, phase-specific patterns and live-match prompts—only after each feature can be calculated and validated from the data."
+    )
+
+
+def evidence() -> None:
+    st.title("The evidence behind CricBuddy")
+    st.markdown("The product rule is simple: **data retrieves, Python calculates, and AI explains.**")
+
+    with st.container(border=True):
+        st.subheader("Current launch feature", icon=":material/check_circle:")
+        st.markdown(
+            "The situation lab uses time-locked ODI chase snapshots from Cricsheet match records. It estimates the state of a chase; it does not make player-level or captaincy recommendations."
+        )
+        st.caption("Cricsheet data is available under the Open Data Commons Attribution License (ODC-BY).")
+
+    with st.expander("Local data foundation", icon=":material/storage:"):
+        if not DEFAULT_DB_PATH.exists():
+            st.info(
+                "The local analysis database has not been imported in this environment. The situation lab uses the separate ODI reference files.",
+                icon=":material/info:",
+            )
+            return
+        try:
+            connection = connect(DEFAULT_DB_PATH, read_only=True)
+            metrics = status_rows(connection)
+            connection.close()
+        except Exception:
+            st.info(
+                "The local analysis database is busy while new data is being processed. The launch feature remains available because it uses the separate ODI reference files.",
+                icon=":material/hourglass_top:",
+            )
+        else:
+            for column, (label, value) in zip(st.columns(3), metrics):
+                column.metric(label, f"{value:,}", border=True)
+
+    st.warning(
+        "CricBuddy is for understanding cricket. It is not a betting product and should not be used to make wagering decisions.",
+        icon=":material/gpp_maybe:",
+    )
+
+
+page = sidebar()
+if page == "Situation lab":
+    situation_lab()
+elif page == "How it works":
+    how_it_works()
+else:
+    evidence()

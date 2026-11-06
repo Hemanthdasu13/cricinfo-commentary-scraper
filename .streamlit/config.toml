@@ -1,0 +1,24 @@
+[theme]
+base = "dark"
+primaryColor = "#F2B84B"
+backgroundColor = "#07130F"
+secondaryBackgroundColor = "#10251C"
+textColor = "#F2F5EF"
+borderColor = "#315244"
+codeBackgroundColor = "#10251C"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFont = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap"
+baseRadius = "0.75rem"
+buttonRadius = "0.75rem"
+showWidgetBorder = true
+showSidebarBorder = true
+paddingTop = "1rem"
+paddingBottom = "2rem"
+
+[theme.sidebar]
+backgroundColor = "#0B1B14"
+secondaryBackgroundColor = "#10251C"
+textColor = "#F2F5EF"
+borderColor = "#315244"
+primaryColor = "#F2B84B"
+linkColor = "#F2B84B"
