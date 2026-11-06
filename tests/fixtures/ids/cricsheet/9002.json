@@ -1,0 +1,52 @@
+{
+  "info": {
+    "dates": ["2026-05-31"],
+    "teams": ["Gujarat Titans", "Royal Challengers Bengaluru"],
+    "event": {"name": "Test League"},
+    "season": "2026",
+    "match_type": "T20",
+    "gender": "male",
+    "team_type": "club",
+    "registry": {
+      "people": {
+        "B Sai Sudharsan": "aaaa0001",
+        "Shubman Gill": "aaaa0002",
+        "JA Duffy": "aaaa0003"
+      }
+    }
+  },
+  "innings": [
+    {
+      "team": "Gujarat Titans",
+      "overs": [
+        {
+          "over": 0,
+          "deliveries": [
+            {
+              "actual_delivery": "0.1",
+              "batter": "B Sai Sudharsan",
+              "bowler": "JA Duffy",
+              "non_striker": "Shubman Gill",
+              "runs": {"batter": 0, "extras": 0, "total": 0}
+            },
+            {
+              "actual_delivery": "0.2",
+              "batter": "B Sai Sudharsan",
+              "bowler": "JA Duffy",
+              "non_striker": "Shubman Gill",
+              "extras": {"wides": 1},
+              "runs": {"batter": 0, "extras": 1, "total": 1}
+            },
+            {
+              "actual_delivery": "0.2",
+              "batter": "B Sai Sudharsan",
+              "bowler": "JA Duffy",
+              "non_striker": "Shubman Gill",
+              "runs": {"batter": 4, "extras": 0, "total": 4}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

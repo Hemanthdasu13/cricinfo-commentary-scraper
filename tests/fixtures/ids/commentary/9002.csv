@@ -1,0 +1,4 @@
+series_id,match_id,match_label,format,match_class,ball_limit,innings,innings_label,batting_team,over,over_number,ball_in_over,bowler,bowler_id,batter,batter_id,non_striker,non_striker_id,runs,play_type,is_wicket,dismissal_type,dismissal_text,innings_runs,innings_wickets,target,short_text,text,pre_text,post_text,timestamp_ms,sequence
+1,9002,GT v RCB,t20,Twenty20,120,1,1st innings,Gujarat Titans,0.1,1,1,Jacob Duffy,547766,Sai Sudharsan,1151288,Shubman Gill,1070173,0,no run,False,,,0,0,,"Duffy to Sai Sudharsan, no run",Fuller and swinging in,,,1,1
+1,9002,GT v RCB,t20,Twenty20,120,1,1st innings,Gujarat Titans,0.1,1,1,Jacob Duffy,547766,Sai Sudharsan,1151288,Shubman Gill,1070173,1,wide,False,,,1,0,,"Duffy to Sai Sudharsan, 1 wide",Sprays it down leg,,,2,2
+1,9002,GT v RCB,t20,Twenty20,120,1,1st innings,Gujarat Titans,0.2,1,2,Jacob Duffy,547766,Sai Sudharsan,1151288,Shubman Gill,1070173,4,four,False,,,5,0,,"Duffy to Sai Sudharsan, FOUR",Driven through cover,,,3,3

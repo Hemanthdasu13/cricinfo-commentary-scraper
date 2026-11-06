@@ -1,0 +1,2 @@
+series_id,match_id,match_label,format,match_class,ball_limit,innings,over,over_number,ball_in_over,batting_team,batter,batter_id,bowler,bowler_id,non_striker,runs,is_wicket,dismissal_type,dismissal_text,innings_runs,innings_wickets,target,short_text,text,pre_text,post_text,timestamp_ms,sequence
+1,9001,Alpha v Beta,t20,Twenty20,120,1,0.1,1,1,Alpha,A Batter,,B Bowler,,A Other,4,False,,,4,0,,four,Driven for four,,,1,1

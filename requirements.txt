@@ -1,2 +1,5 @@
 requests>=2.31,<3
-
+duckdb>=1.1,<2
+streamlit>=1.40,<2
+plotly>=5.24,<7
+pytest>=8.3,<9

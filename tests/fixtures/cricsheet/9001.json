@@ -1,0 +1,30 @@
+{
+  "info": {
+    "dates": ["2024-01-01"],
+    "teams": ["Alpha", "Beta"],
+    "event": {"name": "Test Cup"},
+    "season": "2024",
+    "match_type": "T20",
+    "gender": "male",
+    "team_type": "club"
+  },
+  "innings": [
+    {
+      "team": "Alpha",
+      "overs": [
+        {
+          "over": 0,
+          "deliveries": [
+            {
+              "actual_delivery": "0.1",
+              "batter": "A Batter",
+              "bowler": "B Bowler",
+              "non_striker": "A Other",
+              "runs": {"batter": 4, "extras": 0, "total": 4}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
