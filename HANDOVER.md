@@ -32,7 +32,8 @@ left. Read sections 1 and 2 before changing anything.
 | Player styles (`player_styles.py`) | Complete: 1,173 players, all matched. |
 | Cricsheet ball-by-ball files | Downloaded 5 Nov 2026 (latest at that time). |
 | CricketIQ app (`app.py`, `cricketiq/`) | Stage 2 foundation built. IPL imported: 98.0% of commentary balls linked to Cricsheet. Player-memory layer added. 6 tests pass. |
-| Other leagues' commentary (BBL, SA20, The Hundred, CPL) | **Downloading since 6 Nov 2026** (819 matches, about 6 to 7 hours); see section 9. |
+| Other leagues' commentary (BBL, SA20, The Hundred, CPL) | **Complete** (7 Nov 2026): BBL 288, SA20 130, CPL 200, The Hundred 201 matches. Every Cricsheet match since 2021 has commentary. |
+| All commentary together | 2,099 matches and 582,998 deliveries (top-10 head-to-heads, IPL and the four leagues, not counting the overlapping India folder). |
 | Coverage check against Cricsheet (since 2021) | Top-10 T20Is 446/446 and ODIs 314/314 have commentary. IPL 426/427: the missing one, PBKS v DC on 8 May 2025, was abandoned after 63 balls, and ESPN doesn't serve it (summary 404, feed 500). |
 | Git | **Nothing from this phase is committed.** See section 10. |
 
@@ -78,6 +79,10 @@ Each folder has `<match_id>.csv`, `<match_id>.raw.json`,
 | `top10_h2h_2021_2023/` | Top-10 head-to-head ODIs and T20Is, 1 Jan 2021 to 19 Nov 2023 | 427 | 154,804 | `matches/top10_h2h_2021_2023.txt` |
 | `top10_h2h_odi_t20i/` | Top-10 head-to-head ODIs and T20Is, 20 Nov 2023 to 4 Nov 2026 | 427 | 144,762 | `matches/top10_h2h.txt` |
 | `ipl_2021_2026/` | IPL, all six seasons 2021 to 2026 | 426 | 102,027 | `matches/ipl_2021_2026.txt` |
+| `bbl_2021_2026/` | Big Bash League, 2020/21 to 2025/26 seasons (matches from 1 Jan 2021) | 288 | 66,676 | `matches/bbl_2021_2026.txt` |
+| `sa20_2021_2026/` | SA20, 2023 to 2026 | 130 | 28,980 | `matches/sa20_2021_2026.txt` |
+| `cpl_2021_2026/` | Caribbean Premier League, 2021 to 2026 | 200 | 46,972 | `matches/cpl_2021_2026.txt` |
+| `hundred_2021_2026/` | The Hundred (men's), 2021 to 2026; format `hundred` | 201 | 38,777 | `matches/hundred_2021_2026.txt` |
 | `india_since_wc2023_odi_t20i/` | India ODIs and T20Is since Nov 2023 (older CSV layout, no player IDs) | 120 | 37,512 | `matches/india_since_wc2023.txt` |
 | `india_2026/`, `ind_in_nz_t20i_2026/`, `ind_vs_nz_t20i_2026/` | Earlier small test sets | | | matching files in `matches/` |
 
@@ -266,21 +271,17 @@ The owner built this. In short:
 
 ## 9. What's left
 
-1. **Finish and check the BBL, SA20, The Hundred and CPL commentary.** The
-   lists were built from Cricsheet with `matches_from_cricsheet.py`:
-   `matches/sa20_2021_2026.txt` (130), `hundred_2021_2026.txt` (201),
-   `cpl_2021_2026.txt` (200) and `bbl_2021_2026.txt` (288). They're
-   downloading in that order into `data/<league>_2021_2026/`, with logs in
-   `data/<league>_run.log`. When done, re-run any league whose log ends with
-   "FAILED" (same command; saved files are reused):
+1. **Commentary collection is complete** (7 Nov 2026). The BBL, SA20, CPL and
+   The Hundred lists were built from Cricsheet with `matches_from_cricsheet.py`
+   and checked against it: all 819 matches have commentary. To add new
+   matches later, download Cricsheet's latest zip, rebuild the list with
+   `matches_from_cricsheet.py`, and re-run the scraper. Saved matches are reused.
+   Example:
 
    ```powershell
    .venv\Scripts\python -u cricinfo_commentary.py --from-file matches/bbl_2021_2026.txt --formats t20 --output-dir data/bbl_2021_2026
    .venv\Scripts\python -u cricinfo_commentary.py --from-file matches/hundred_2021_2026.txt --formats hundred --output-dir data/hundred_2021_2026
-   ```
-
-   Then compare the counts with Cricsheet, as was done for the internationals
-   and IPL. Cricsheet already has the
+   ``` Cricsheet already has the
    ball-by-ball facts for all of them.
 2. **Run `cricketiq.ingest --all`** once the data is in place, and check the
    link rate per competition. The internationals and the old India folder may
