@@ -15,6 +15,10 @@ When the over plays out the way the app said, the fan sees the pattern for
 themselves. That is the point: it makes watching more interesting, and every
 call can be checked.
 
+**The product is called CricBuddy.** The idea, a real example computed from
+this data, how it will be built and where each part stands are in
+[docs/CRICBUDDY.md](docs/CRICBUDDY.md).
+
 ## How the predictions get sharper
 
 1. **Basic matchups.** Batter against bowler type: left-arm orthodox, wrist
